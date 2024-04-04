@@ -384,7 +384,7 @@ class Isosceles(Triangle):
    
    def _compute_base_and_equal_edges(self) -> list:
       equal_pairs = sorted(self._edges, key = lambda edge: edge.length)
-      base: Edge = Vertex(0, 0)
+      base: Vertex = Vertex(0, 0)
       if equal_pairs[0].length != equal_pairs[1].length:
          base = equal_pairs[0]
          equal_pairs.remove(equal_pairs[0])
