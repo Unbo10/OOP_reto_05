@@ -10,13 +10,16 @@ from Shape.Edge.vertex import Vertex
 
 class Edge: 
    def __init__(self, v1: Vertex, v2: Vertex) -> None:
-      # TODO: Check vector_end and vector_start: self.start might need to be self.end and viceversa (an if may need to be added to initialize both)
-      self.start = v1
-      self.end = v2
+      if v1.x > v2.x:
+         self.start = v2
+         self.end = v1
+      else:
+         self.start = v1
+         self.end = v2
       self.length = round(v1.calculate_vertex_distance(v2), 4)
       self.slope = self._compute_slope()
-      self.vector_end: Vertex = Vertex(self.end.x - self.start.x, self.end.y - self.start.y) # * From end to start
-      self.vector_start: Vertex = Vertex(self.start.x - self.end.x, self.start.y - self.end.y) # * From start to end
+      self.vector_end: Vertex = Vertex(self.end.x - self.start.x, self.end.y - self.start.y)
+      self.vector_start: Vertex = Vertex(self.start.x - self.end.x, self.start.y - self.end.y) 
 
    def _compute_slope(self) -> float:
       if (self.end.x - self.start.x) == 0:
@@ -34,9 +37,9 @@ def test_default() -> None:
    edge.end.print_vertex_coordinates()
    print("Length of the edge:", edge.length)
    print("Slope of the edge:", edge.slope)
-   print("Vector from end to start:", end =" ")
-   edge.vector_end.print_vertex_coordinates()
    print("Vector from start to end:", end =" ")
+   edge.vector_end.print_vertex_coordinates()
+   print("Vector from end to start:", end =" ")
    edge.vector_start.print_vertex_coordinates()
 
 def test_user_input() -> None:
@@ -54,9 +57,9 @@ def test_user_input() -> None:
    edge.end.print_vertex_coordinates()
    print("Length of the edge:", edge.length)
    print("Slope of the edge:", edge.slope)
-   print("Vector from end to start:", end =" ")
-   edge.vector_end.print_vertex_coordinates()
    print("Vector from start to end:", end =" ")
+   edge.vector_end.print_vertex_coordinates()
+   print("Vector from end to start:", end =" ")
    edge.vector_start.print_vertex_coordinates()
 
 if __name__ == "__main__":

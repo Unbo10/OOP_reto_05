@@ -41,6 +41,7 @@ def test_default() -> None:
 def test_user_input() -> None:
    """Function to test the creation of an equilateral triangle with user input."""
    print("Equilateral triangle user input test")
+   print("Warning: Any square root must be entered with at least four (4) decimal places") 
    print("Enter the vertices of an equilateral triangle")
    x1 = float(input("Enter the x coordinate of the first vertex: "))
    y1 = float(input("Enter the y coordinate of the first vertex: "))
