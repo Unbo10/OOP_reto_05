@@ -290,7 +290,7 @@ class Shape:
       while i < len(self._edges) - 1:
          inner_angles.append(math.acos(((self._edges[i].vector_start.x * self._edges[i + 1].vector_end.x) + (self._edges[i].vector_start.y * self._edges[i + 1].vector_end.y))/(self._edges[i].length * self._edges[i + 1].length)))
          i += 1
-      inner_angles.append(math.acos(((self._edges[i].vector_start.x * self._edges[0].vector_end.x) + (self._edges[i].vector_start.y * self._edges[0].vector_end.y))/(self._edges[i].length * self._edges[0].length)))
+      inner_angles.insert(0, math.acos(((self._edges[i].vector_start.x * self._edges[0].vector_end.x) + (self._edges[i].vector_start.y * self._edges[0].vector_end.y))/(self._edges[i].length * self._edges[0].length)))
       inner_angles = [round(t*(180/math.pi), 2) for t in inner_angles]
       # self.get_shape_edges()
       # print(inner_angles)

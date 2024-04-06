@@ -10,16 +10,14 @@ from Shape.Edge.vertex import Vertex
 
 class Edge: 
    def __init__(self, v1: Vertex, v2: Vertex) -> None:
-      if v1.x > v2.x:
-         self.start = v2
-         self.end = v1
-      else:
-         self.start = v1
-         self.end = v2
+      self.start = v2
+      self.end = v1
+      self.start = v1
+      self.end = v2
       self.length = round(v1.calculate_vertex_distance(v2), 4)
       self.slope = self._compute_slope()
-      self.vector_end: Vertex = Vertex(self.end.x - self.start.x, self.end.y - self.start.y)
-      self.vector_start: Vertex = Vertex(self.start.x - self.end.x, self.start.y - self.end.y) 
+      self.vector_end: Vertex = Vertex(self.end.x - self.start.x, self.end.y - self.start.y) # * Vector from start to end
+      self.vector_start: Vertex = Vertex(self.start.x - self.end.x, self.start.y - self.end.y) # * Vector from end to start
 
    def _compute_slope(self) -> float:
       if (self.end.x - self.start.x) == 0:
