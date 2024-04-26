@@ -6,7 +6,7 @@ try:
 except ValueError:
    sys.path.append(grandparent_dir)
 
-from Shape.Edge.vertex import Vertex
+from Shape.Edge.vertex import Vertex, enter_coordinate
 
 class Edge: 
    def __init__(self, v1: Vertex, v2: Vertex) -> None:
@@ -14,7 +14,7 @@ class Edge:
       self.end = v1
       self.start = v1
       self.end = v2
-      self.length = round(v1.calculate_vertex_distance(v2), 4)
+      self.length = v1.calculate_vertex_distance(v2)
       self.slope = self._compute_slope()
       self.vector_end: Vertex = Vertex(self.end.x - self.start.x, self.end.y - self.start.y) # * Vector from start to end
       self.vector_start: Vertex = Vertex(self.start.x - self.end.x, self.start.y - self.end.y) # * Vector from end to start
@@ -44,16 +44,27 @@ def test_user_input() -> None:
    """Function to test the creation of an edge with user input."""
    print("Edge user input test")
    print("Enter the coordinates of the vertices of an edge")
-   x1 = float(input("Enter the x coordinate of the first vertex: "))
-   y1 = float(input("Enter the y coordinate of the first vertex: "))
-   x2 = float(input("Enter the x coordinate of the second vertex: "))
-   y2 = float(input("Enter the y coordinate of the second vertex: "))
-   edge = Edge(Vertex(x1, y1), Vertex(x2, y2))
+
+   valid_input: bool = False
+   x1: float = enter_coordinate("x coordinate of the first vertex")
+   y1: float = enter_coordinate("y coordinate of the first vertex")
+   while valid_input == False:
+      try:
+         x2: float = enter_coordinate("x coordinate of the second vertex")
+         y2: float = enter_coordinate("y coordinate of the second vertex")
+         if  (x1 == x2) and (y1 == y2):
+            raise AssertionError
+      except AssertionError as e:
+         print("The edge cannot be created because the vertices are the same")
+      else:
+         valid_input = True
+
+   edge: Edge = Edge(Vertex(x1, y1), Vertex(x2, y2))
    print("Start vertex:", end = " ")
    edge.start.print_vertex_coordinates()
    print("End vertex:", end = " ")
    edge.end.print_vertex_coordinates()
-   print("Length of the edge:", edge.length)
+   print("Length of the edge:", round(edge.length, 4))
    print("Slope of the edge:", edge.slope)
    print("Vector from start to end:", end =" ")
    edge.vector_end.print_vertex_coordinates()
@@ -61,6 +72,11 @@ def test_user_input() -> None:
    edge.vector_start.print_vertex_coordinates()
 
 if __name__ == "__main__":
-   test_default()
-   print()
-   test_user_input()
+   try:
+      test_default()
+      print()
+      test_user_input()
+   except KeyboardInterrupt:
+      print("\n\nProgram stopped by the user")
+   finally:
+      print("Thank you for using the program!", end="")

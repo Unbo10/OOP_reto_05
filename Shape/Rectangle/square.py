@@ -7,7 +7,12 @@ except ValueError:
    sys.path.append(grandparent_dir)
 
 from Shape.Rectangle.rectangle import Rectangle
-from Shape.Edge.vertex import Vertex
+from Shape.Edge.vertex import Vertex, enter_coordinate
+from Shape.Edge.edge import Edge
+
+class NotSquareSide (Exception):
+   def __init__(self, message="The vertices do not form a side of the square") -> None:
+      super().__init__(message)
 
 class Square(Rectangle):
    def __init__(self, *args) -> None:
@@ -40,16 +45,73 @@ def test_default() -> None:
 def test_user_input() -> None:
    """Function to test the creation of a square with user input."""
    print("Square user input test")
-   print("Enter the vertices of a square")
-   x1 = float(input("Enter the x coordinate of the first vertex: "))
-   y1 = float(input("Enter the y coordinate of the first vertex: "))
-   x2 = float(input("Enter the x coordinate of the second vertex: "))
-   y2 = float(input("Enter the y coordinate of the second vertex: "))
-   x3 = float(input("Enter the x coordinate of the third vertex: "))
-   y3 = float(input("Enter the y coordinate of the third vertex: "))
-   x4 = float(input("Enter the x coordinate of the fourth vertex: "))
-   y4 = float(input("Enter the y coordinate of the fourth vertex: "))
-   vertices = [Vertex(x1, y1), Vertex(x2, y2), Vertex(x3, y3), Vertex(x4, y4)]
+   print("Enter the vertices of a square in a way such that two consecutive vertices form a side of the square and not a diagonal")
+   v1: Vertex = Vertex(0, 0)
+   v2: Vertex = Vertex(0, 0)
+   v3: Vertex = Vertex(0, 0)
+   v4: Vertex = Vertex(0, 0)
+   length: float = 0
+   e1: Edge = Edge(Vertex(0, 0), Vertex(0, 0))
+   valid_input: bool = False
+
+   x1: float = enter_coordinate("x coordinate of the first vertex")
+   y1: float = enter_coordinate("y coordinate of the first vertex")
+   v1 = Vertex(x1, y1)
+   while valid_input == False:
+      try:
+         x2: float = enter_coordinate("x coordinate of the second vertex")
+         y2: float = enter_coordinate("y coordinate of the second vertex")
+         if (x1 == x2) and (y1 == y2):
+            raise AssertionError
+         elif (x1 != x2) and (y1 != y2):
+            raise NotSquareSide
+      except AssertionError:
+         print("The square cannot be created because the vertices are the same")
+      except NotSquareSide as e:
+         print(e)
+      else:
+         v2 = Vertex(x2, y2)
+         e1 = Edge(Vertex(x1, y1), Vertex(x2, y2))
+         length = e1.length
+         valid_input = True
+      
+   valid_input = False
+   while valid_input == False:
+      try:
+         x3: float = enter_coordinate("x coordinate of the third vertex")
+         y3: float = enter_coordinate("y coordinate of the third vertex")
+         e1 = Edge(Vertex(x2, y2), Vertex(x3, y3))
+         if (x3 == x1) and (y3 == y1):
+            raise AssertionError
+         elif (e1.length != length):
+            raise NotSquareSide
+      except AssertionError:
+         print("The square cannot be created because the vertices are the same")
+      except NotSquareSide as e:
+         print(e)
+      else:
+         v3 = Vertex(x3, y3)
+         valid_input = True
+   
+   valid_input = False
+   while valid_input == False:
+      try:
+         x4: float = enter_coordinate("x coordinate of the fourth vertex")
+         y4: float = enter_coordinate("y coordinate of the fourth vertex")
+         e1 = Edge(Vertex(x3, y3), Vertex(x4, y4))
+         if ((x4 == x2) and (y4 == y2)) or ((x4 == x1) and (y4 == y1)) or ((x4 == x3) and (y4 == y3)):
+            raise AssertionError
+         elif (e1.length != length):
+            raise NotSquareSide
+      except AssertionError:
+         print("The square cannot be created because the vertices are the same")
+      except NotSquareSide as e:
+         print(e)
+      else:
+         v4 = Vertex(x4, y4)
+         valid_input = True
+
+   vertices = [v1, v2, v3, v4]
    square = Square(vertices)
    print("The square is regular:", square._is_regular)
    print("Vertices of the square: ", end = "")
@@ -61,6 +123,11 @@ def test_user_input() -> None:
    print("Area of the square:", square._area)
 
 if __name__ == "__main__":
-   test_default()
-   print()
-   test_user_input()
+   try:
+      test_default()
+      print()
+      test_user_input()
+   except KeyboardInterrupt:
+      print("\n\nProgram stopped by the user", end="")
+   finally:
+      print("Thank you for using the program!")

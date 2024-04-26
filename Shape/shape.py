@@ -8,7 +8,11 @@ except ValueError:
    sys.path.append(parent_dir)
 
 from Shape.Edge.edge import Edge
-from Shape.Edge.edge import Vertex
+from Shape.Edge.vertex import Vertex, enter_coordinate
+
+class InsufficientVerticesError(Exception):
+   def __init__(self, message="The shape must have more than three vertices") -> None:
+      super().__init__(message)
 
 class Shape:
    def __init__(self, list_of_vertices) -> None:
@@ -22,21 +26,6 @@ class Shape:
       self._is_regular: bool = self._is_shape_regular()
       self._area: float = None
       self._perimeter: float = None
-
-   def _eliminate_repeated_vertices(self, vertices_giv) -> list:
-      """Method to remove vertices with the same x and same y coordinates"""
-
-      count = 0
-      for k in vertices_giv:
-         count = 0
-         for j in vertices_giv:
-               if (k.x == j.x) and (k.y == j.y):
-                  count += 1
-               if count > 1:
-                  vertices_giv.remove(j)
-                  count -= 1
-
-      return vertices_giv
    
    def _sort_not_passed_vertices(self, m: Vertex, vertices_giv: list, passed: str) -> list:
       """Method to sort the vertices that have not been passed yet, that is, that have not been sorted yet. This is done to avoid positioning a vertex as the following of another vertex although is not the immediately following one."""
@@ -122,7 +111,6 @@ class Shape:
       """This method is responsible for creating a clockwise list of the vertices of the shape. It does so by checking which conditions the vertices of a previously ordered and optimized (no repeated vertices) list of vertices fulfill. This will vary depending on the current outermost vertex from the center of the shape (left-most, right-most, top-most or bottom-most). The method will then sort the vertices so that the following one is the closest to the current vertex."""
       """Analogy: This system as a whole can be seen as a clock: imagine a convex shape. Although it can be as irregular as you want, it is an approximation of a circle, somewhat, right? Now, its vertices can be seen as different times the clock gives when its hands start to move clockwise. What the method does is it makes sure the usual times are set on the right place, for example, you don't want to see you just had lunch and it's 5:00 an hour later, right? To do this, it first sets the 12:00, 3:00, 6:00 and 9:00 times to have a reference of where the other times (vertices) are. Then, it just looks at the time at a certain position and compares it with the following reference (the current or already passed is 12:00 to start), so as to avoid misplacing times (vertices), and determines if there is any other time further in the past than the reference in the whole clock. If so, it swaps the times (vertices) so that the time (vertex) that is further in the past is the following one. It does this for all times (vertices) in the clock (shape) until it reaches the 12:00 time (vertex) again."""
 
-      vertices_giv = self._eliminate_repeated_vertices(vertices_giv)
       vertices_giv = sorted(vertices_giv, key = lambda vertex: vertex.x)
       min_y, max_y, min_x, max_x = self._get_max_and_min_vertices(vertices_giv)
       passed: int = 0 
@@ -265,9 +253,9 @@ class Shape:
 
    def _is_shape_regular(self) -> bool:
       same_length_count = 0
-      length = self._edges[0].length
+      length = round(self._edges[0].length, 4)
       for e in self._edges:
-         if e.length == length:
+         if round(e.length, 4) == length:
             same_length_count += 1
          else:
             return False
@@ -290,7 +278,7 @@ class Shape:
       while i < len(self._edges) - 1:
          inner_angles.append(math.acos(((self._edges[i].vector_start.x * self._edges[i + 1].vector_end.x) + (self._edges[i].vector_start.y * self._edges[i + 1].vector_end.y))/(self._edges[i].length * self._edges[i + 1].length)))
          i += 1
-      inner_angles.insert(0, math.acos(((self._edges[i].vector_start.x * self._edges[0].vector_end.x) + (self._edges[i].vector_start.y * self._edges[0].vector_end.y))/(self._edges[i].length * self._edges[0].length)))
+      inner_angles.append(math.acos(((self._edges[i].vector_start.x * self._edges[0].vector_end.x) + (self._edges[i].vector_start.y * self._edges[0].vector_end.y))/(self._edges[i].length * self._edges[0].length)))
       inner_angles = [round(t*(180/math.pi), 2) for t in inner_angles]
       # self.get_shape_edges()
       # print(inner_angles)
@@ -341,38 +329,52 @@ def test_default() -> None:
    print()
 
 def test_user_input() -> None:
-   """Function to test the creation of a shape with user input."""
-   print("Now, let's create a shape! (must have more than 3 vertices for the method _create_vertices() to work. The method is overriden for this particular case in the module \"triangle.py\")")
+   """Function to test the creation of a convex shape with user input."""
+   print("Enter the coordinates of the vertices of a convex shape (must have more than 3 vertices for the method _create_vertices() to work. The method is overriden for this particular case in the module \"triangle.py\")")
    given_vertices: list = []
    vertex_type: str = "x"
    user_input = 0
-   x: int = 0
-   y: int = 0
+   x: float = 0
+   y: float = 0
    conti = True
-   print("To stop entering vertices type \"s\" after entering the y-coordinate of the last vertex")
-   user_input = input("Please insert the x coordinate of the first vertex in the shape: ")
+   print("To stop entering vertices press Ctrl+C")
    while conti == True:
-      if user_input != "s":
-         if vertex_type == "x":
-            x = float(user_input)
-            vertex_type = "y"
-            user_input = input("Now, please insert the y coordinate of the vertex in the shape: ")
-         else:
-            y = float(user_input)
-            vertex_type = "x"
-            given_vertices.append(Vertex(x, y))
-            user_input = input("Please insert the x coordinate of the next vertex in the shape: ")
-      else:
+      try:
+         x = enter_coordinate("x coordinate of the vertex")
+         y = enter_coordinate("y coordinate of the vertex")
+         for i in given_vertices:
+            if (i.x == x) and (i.y == y):
+               raise AssertionError
+      except AssertionError:
+         print("The vertex has already been entered")
+      except KeyboardInterrupt:
          conti = False
+      else:
+         given_vertices.append(Vertex(x, y))
 
-   shape1 = Shape(given_vertices)
-   print("The shape is regular:", shape1._is_regular)
-   print("The vertices are: ", end="")
-   shape1.get_shape_vertices()
-   print("The edges are: ", end="")
-   shape1.get_shape_edges()
-   print("The inner angles are:", shape1.get_inner_angles())
+   try:
+      shape1 = Shape(given_vertices)
+      if (len(given_vertices)==3):
+         raise InsufficientVerticesError
+   except InsufficientVerticesError as i:
+      print()
+      print(i)
+   except IndexError:
+      print()
+      print("The shape is not convex")
+   else:
+      print("The shape is regular:", shape1._is_regular)
+      print("The vertices are: ", end="")
+      shape1.get_shape_vertices()
+      print("The edges are: ", end="")
+      shape1.get_shape_edges()
+      print("The inner angles are:", shape1.get_inner_angles())
 
 if __name__ == "__main__":
-   test_default()
-   test_user_input()
+   try:
+      test_default()
+      test_user_input()
+   except KeyboardInterrupt:
+      print("\n\nProgram stopped by the user")
+   finally:
+      print("Thank you for using the program!", end = "")

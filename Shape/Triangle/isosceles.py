@@ -7,8 +7,13 @@ try:
 except ValueError:
    sys.path.append(grandparent_dir)
 
-from Shape.Triangle.triangle import Triangle
-from Shape.Edge.vertex import Vertex
+from Shape.Triangle.triangle import Triangle, NotTriangleError
+from Shape.Edge.vertex import Vertex, enter_coordinate
+from Shape.Edge.edge import Edge
+
+class NotIsoscelesError(NotTriangleError):
+   def __init__(self, message="The vertices do not form an isosceles triangle") -> None:
+      super().__init__(message)
 
 class Isosceles(Triangle):
    def __init__(self, *args) -> None:
@@ -55,12 +60,41 @@ def test_user_input() -> None:
    """Function to test the creation of an isosceles triangle with user input."""
    print("Isosceles user input test")
    print("Enter the vertices of an isosceles triangle")
-   x1 = float(input("Enter the x coordinate of the first vertex: "))
-   y1 = float(input("Enter the y coordinate of the first vertex: "))
-   x2 = float(input("Enter the x coordinate of the second vertex: "))
-   y2 = float(input("Enter the y coordinate of the second vertex: "))
-   x3 = float(input("Enter the x coordinate of the third vertex: "))
-   y3 = float(input("Enter the y coordinate of the third vertex: "))
+   valid_input: bool = False
+   e1: Edge = Edge(Vertex(0, 0), Vertex(0, 0))
+   e2: Edge = Edge(Vertex(0, 0), Vertex(0, 0))
+   e3: Edge = Edge(Vertex(0, 0), Vertex(0, 0))
+
+   x1: float = enter_coordinate("x coordinate of the first vertex")
+   y1: float = enter_coordinate("y coordinate of the first vertex")
+   while valid_input == False:
+      try:
+         x2: float = enter_coordinate("x coordinate of the second vertex")
+         y2: float = enter_coordinate("y coordinate of the second vertex")
+         if ((x1 == x2) and (y1 == y2)):
+            raise AssertionError
+      except AssertionError:
+         print("The vertices must be different")
+      else:
+         e1: Edge = Edge(Vertex(x1, y1), Vertex(x2, y2))
+         valid_input = True
+   
+   valid_input = False
+   while valid_input == False:
+      try:
+         x3: float = enter_coordinate("x coordinate of the third vertex")
+         y3: float = enter_coordinate("y coordinate of the third vertex")
+         e2 = Edge(Vertex(x2, y2), Vertex(x3, y3))
+         e3 = Edge(Vertex(x3, y3), Vertex(x1, y1))
+         if (e1.length != e2.length) and (e1.length != e3.length) and (e2.length != e3.length):
+            raise NotIsoscelesError
+         elif (e1.slope == e2.slope) or (e1.slope == e3.slope) or (e2.slope == e3.slope):
+            raise NotIsoscelesError
+      except NotIsoscelesError as e:
+         print(e)
+      else:
+         valid_input = True
+
    vertices = [Vertex(x1, y1), Vertex(x2, y2), Vertex(x3, y3)]
    isosceles = Isosceles(vertices)
    print("The isosceles triangle is regular:", isosceles._is_regular)
@@ -73,6 +107,11 @@ def test_user_input() -> None:
    print("Area of the isosceles triangle:", isosceles._area)
 
 if __name__ == "__main__":
-   test_default()
-   print()
-   test_user_input()
+   try:
+      test_default()
+      print()
+      test_user_input()
+   except KeyboardInterrupt:
+      print("\n\nProgram stopped by the user")
+   finally:
+      print("Thank you for using the program!", end="")

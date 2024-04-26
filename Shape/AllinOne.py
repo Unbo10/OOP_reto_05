@@ -1,4 +1,552 @@
 import math # Built-in module
+
+def enter_coordinate(coordinate: str) -> float:
+   done: bool = False
+   while done == False:
+      try:
+         n = float(input("Enter the {}: ".format(coordinate)))
+      except ValueError as e:
+         print("The value enterd is not a real number")
+      else:
+         done = True
+   return n
+
+class InsufficientVerticesError(Exception):
+   def __init__(self, message="The shape must have more than three vertices") -> None:
+      super().__init__(message)
+
+class NotStraightEdgeError(Exception):
+   def __init__(self, message="The rectangle cannot be created because the vertex entered doesn't form a straight edge with the previous vertex") -> None:
+      super().__init__(message)
+
+class NotSquareSide(Exception):
+   def __init__(self, message="The vertices do not form a side of the square") -> None:
+      super().__init__(message)
+
+class NotTriangleError(Exception):
+   def __init__(self, *args) -> None:
+      super().__init__(*args)
+
+class NotEquilateralError(NotTriangleError):
+   def __init__(self, message="The vertices do not form an equilateral triangle") -> None:
+      super().__init__(message)
+
+class NotIsoscelesError(Exception):
+   def __init__(self, message="The vertices do not form an isosceles triangle") -> None:
+      super().__init__(message)
+   
+class NotRightTriangleError(Exception):
+   def __init__(self, message="The vertices do not form a right triangle") -> None:
+      super().__init__(message)
+
+class Test:
+   def test_user_input_vertex(self) -> None:
+      """Function to test the creation of two vertices with user input."""
+      print("Vertex user input test")
+      print("Enter the coordinates of two vertices")
+      x1: float = enter_coordinate("x coordinate of the first vertex")
+      y1: float = enter_coordinate("y coordinate of the first vertex")
+      x2: float = enter_coordinate("x coordinate of the second vertex")
+      y2: float = enter_coordinate("y coordinate of the second vertex")
+      v1: Vertex = Vertex(x1, y1)
+      v2: Vertex = Vertex(x2, y2)
+      print("Vertex 1: ", end = "")
+      v1.print_vertex_coordinates()
+      print("Vertex 2: ", end = "")
+      v2.print_vertex_coordinates()
+      print("Distance between the vertices:", v1.calculate_vertex_distance(v2))
+   
+   def test_user_input_edge(self) -> None:
+      """Function to test the creation of an edge with user input."""
+      print("Edge user input test")
+      print("Enter the coordinates of the vertices of an edge")
+
+      valid_input: bool = False
+      x1: float = enter_coordinate("x coordinate of the first vertex")
+      y1: float = enter_coordinate("y coordinate of the first vertex")
+      while valid_input == False:
+         try:
+            x2: float = enter_coordinate("x coordinate of the second vertex")
+            y2: float = enter_coordinate("y coordinate of the second vertex")
+            if  (x1 == x2) and (y1 == y2):
+               raise ValueError
+         except ValueError as e:
+            print("The edge cannot be created because the vertices are the same")
+         else:
+            valid_input = True
+
+      edge: Edge = Edge(Vertex(x1, y1), Vertex(x2, y2))
+      print("Start vertex:", end = " ")
+      edge.start.print_vertex_coordinates()
+      print("End vertex:", end = " ")
+      edge.end.print_vertex_coordinates()
+      print("Length of the edge:", round(edge.length, 4))
+      print("Slope of the edge:", edge.slope)
+      print("Vector from start to end:", end =" ")
+      edge.vector_end.print_vertex_coordinates()
+      print("Vector from end to start:", end =" ")
+      edge.vector_start.print_vertex_coordinates()
+
+   def test_user_input_shape(self) -> None:
+      """Function to test the creation of a convex shape with user input."""
+      print("Enter the coordinates of the vertices of a convex shape (must have more than 3 vertices for the method _create_vertices() to work. The method is overriden for this particular case in the module \"triangle.py\")")
+      given_vertices: list = []
+      vertex_type: str = "x"
+      user_input = 0
+      x: float = 0
+      y: float = 0
+      conti = True
+      print("To stop entering vertices press Ctrl+C")
+      while conti == True:
+         try:
+            x = enter_coordinate("x coordinate of the vertex")
+            y = enter_coordinate("y coordinate of the vertex")
+            for i in given_vertices:
+               if (i.x == x) and (i.y == y):
+                  raise AssertionError
+         except AssertionError:
+            print("The vertex has already been entered")
+         except KeyboardInterrupt:
+            conti = False
+         else:
+            given_vertices.append(Vertex(x, y))
+
+      try:
+         shape1 = Shape(given_vertices)
+         if (len(given_vertices)==3):
+            raise InsufficientVerticesError
+      except InsufficientVerticesError as i:
+         print()
+         print(i)
+      except IndexError:
+         print()
+         print("The shape is not convex")
+      else:
+         print("The shape is regular:", shape1._is_regular)
+         print("The vertices are: ", end="")
+         shape1.get_shape_vertices()
+         print("The edges are: ", end="")
+         shape1.get_shape_edges()
+         print("The inner angles are:", shape1.get_inner_angles())
+
+   def test_user_input_rectangle(self) -> None:
+      """Function to test the creation of a rectangle with user input."""
+      print("Rectangle user input test")
+      print("Enter the vertices of a rectangle in a clockwise manner")
+
+      valid_input: bool = False
+      v1: Vertex = Vertex(0, 0)
+      v2: Vertex = Vertex(0, 0)
+      v3: Vertex = Vertex(0, 0)
+      v4: Vertex = Vertex(0, 0)
+
+      x1: float = enter_coordinate("x coordinate of the first vertex")
+      y1: float = enter_coordinate("y coordinate of the first vertex")
+      v1 = Vertex(x1, y1)
+      while valid_input == False:
+         try:
+            x2: float = enter_coordinate("x coordinate of the second vertex")
+            y2: float = enter_coordinate("y coordinate of the second vertex")
+            if (x1 == x2) and (y1 == y2):
+               raise AssertionError
+            elif (x1 != x2) and (y1 != y2):
+               raise NotStraightEdgeError
+         except AssertionError:
+            print("The rectangle cannot be created because the vertices are the same")
+         except NotStraightEdgeError as e:
+            print(e)
+         else:
+            v2 = Vertex(x2, y2)
+            valid_input = True
+      
+      valid_input = False
+      while valid_input == False:
+         try:
+            x3: float = enter_coordinate("x coordinate of the third vertex")
+            y3: float = enter_coordinate("y coordinate of the third vertex")
+            if ((x2 == x3) and (y2 == y3)) or ((x1 == x3) and (y1 == y3)):
+               raise AssertionError
+            elif (x2 != x3) and (y2 != y3):
+               raise NotStraightEdgeError
+         except AssertionError:
+            print("The rectangle cannot be created because the input matches a previous vertex")
+         except NotStraightEdgeError as e:
+            print(e)
+         else:
+            v3 = Vertex(x3, y3)
+            valid_input = True
+      
+      valid_input = False
+      while valid_input == False:
+         try:
+            x4: float = enter_coordinate("x coordinate of the fourth vertex")
+            y4: float = enter_coordinate("y coordinate of the fourth vertex")
+            v4 = Vertex(x4, y4)
+            e2: Edge = Edge(v1, v4)
+            e1: Edge = Edge(v3, v4)
+            if ((x3 == x4) and (y3 == y4)) or ((x2 == x4) and (y2 == y4)) or ((x1 == x4) and (y1 == y4)):
+               raise AssertionError
+            elif ((e1.slope != None) and (e1.slope != 0)) or ((e2.slope != None) and (e2.slope != 0)):
+               raise NotStraightEdgeError
+         except AssertionError:
+            print("The rectangle cannot be created because the input matches a previous vertex")
+         except NotStraightEdgeError as e:
+            print(e)
+         else:
+            valid_input = True
+
+      vertices: list = [v1, v2, v3, v4]
+      rectangle = Rectangle(vertices)
+      print("The rectangle is regular:", rectangle._is_regular)
+      print("Vertices of the rectangle: ", end = "")
+      rectangle.get_shape_vertices()
+      print("Edges of the rectangle: ", end = "")
+      rectangle.get_shape_edges()
+      print("Inner angles of the rectangle:", rectangle.get_inner_angles())
+      print("Perimeter of the rectangle:", rectangle._perimeter)
+      print("Area of the rectangle:", rectangle._area)
+
+   def test_user_input_square(self) -> None:
+      """Function to test the creation of a square with user input."""
+      print("Square user input test")
+      print("Enter the vertices of a square in a way such that two consecutive vertices form a side of the square and not a diagonal")
+      v1: Vertex = Vertex(0, 0)
+      v2: Vertex = Vertex(0, 0)
+      v3: Vertex = Vertex(0, 0)
+      v4: Vertex = Vertex(0, 0)
+      length: float = 0
+      e1: Edge = Edge(Vertex(0, 0), Vertex(0, 0))
+      valid_input: bool = False
+
+      x1: float = enter_coordinate("x coordinate of the first vertex")
+      y1: float = enter_coordinate("y coordinate of the first vertex")
+      v1 = Vertex(x1, y1)
+      while valid_input == False:
+         try:
+            x2: float = enter_coordinate("x coordinate of the second vertex")
+            y2: float = enter_coordinate("y coordinate of the second vertex")
+            if (x1 == x2) and (y1 == y2):
+               raise AssertionError
+            elif (x1 != x2) and (y1 != y2):
+               raise NotSquareSide
+         except AssertionError:
+            print("The square cannot be created because the vertices are the same")
+         except NotSquareSide as e:
+            print(e)
+         else:
+            v2 = Vertex(x2, y2)
+            e1 = Edge(Vertex(x1, y1), Vertex(x2, y2))
+            length = e1.length
+            valid_input = True
+         
+      valid_input = False
+      while valid_input == False:
+         try:
+            x3: float = enter_coordinate("x coordinate of the third vertex")
+            y3: float = enter_coordinate("y coordinate of the third vertex")
+            e1 = Edge(Vertex(x2, y2), Vertex(x3, y3))
+            if (x3 == x1) and (y3 == y1):
+               raise AssertionError
+            elif (e1.length != length):
+               raise NotSquareSide
+         except AssertionError:
+            print("The square cannot be created because the vertices are the same")
+         except NotSquareSide as e:
+            print(e)
+         else:
+            v3 = Vertex(x3, y3)
+            valid_input = True
+      
+      valid_input = False
+      while valid_input == False:
+         try:
+            x4: float = enter_coordinate("x coordinate of the fourth vertex")
+            y4: float = enter_coordinate("y coordinate of the fourth vertex")
+            e1 = Edge(Vertex(x3, y3), Vertex(x4, y4))
+            if ((x4 == x2) and (y4 == y2)) or ((x4 == x1) and (y4 == y1)):
+               raise AssertionError
+            elif (e1.length != length):
+               raise NotSquareSide
+         except AssertionError:
+            print("The square cannot be created because the vertices are the same")
+         except NotSquareSide as e:
+            print(e)
+         else:
+            v4 = Vertex(x4, y4)
+            valid_input = True
+
+      vertices = [v1, v2, v3, v4]
+      square = Square(vertices)
+      print("The square is regular:", square._is_regular)
+      print("Vertices of the square: ", end = "")
+      square.get_shape_vertices()
+      print("Edges of the square: ", end = "")
+      square.get_shape_edges()
+      print("Inner angles of the square:", square.get_inner_angles())
+      print("Perimeter of the square:", square._perimeter)
+      print("Area of the square:", square._area)
+
+   def test_user_input_triangle(self) -> None:
+      """Function to test the creation of a triangle with user input."""
+      print("Triangle user input test")
+      print("Enter the vertices of a triangle")
+      x1: float = enter_coordinate("x coordinate of the first vertex")
+      y1: float = enter_coordinate("y coordinate of the first vertex")
+      valid_input: bool = False
+
+      while valid_input == False:
+         try:
+            x2: float = enter_coordinate("x coordinate of the second vertex")
+            y2: float = enter_coordinate("y coordinate of the second vertex")
+            if (x1 == x2) and (y1 == y2):
+               raise NotTriangleError("The vertices must be different")
+         except NotTriangleError as e:
+            print(e)
+         else:
+            valid_input = True
+      
+      valid_input = False
+      while valid_input == False:
+         try:
+            x3: float = enter_coordinate("x coordinate of the third vertex")
+            y3: float = enter_coordinate("y coordinate of the third vertex")
+            if ((x2 == x3) and (y2 == y3)) or ((x1 == x3) and (y1 == y3)):
+               NotTriangleError("The vertices must be different")
+         except NotTriangleError as e:
+            print(e)
+         else:
+            valid_input = True
+
+      vertices = [Vertex(x1, y1), Vertex(x2, y2), Vertex(x3, y3)]
+      triangle = Triangle(vertices)
+      print("The shape is regular:", triangle._is_regular)
+      print("The vertices are: ", end="")
+      triangle.get_shape_vertices()
+      print("The edges are: ", end="")
+      triangle.get_shape_edges()
+      print("The inner angles are:", triangle.get_inner_angles())
+
+   def test_user_input_equilateral(self) -> None:
+      """Function to test the creation of an equilateral triangle with user input."""
+      print("Equilateral triangle user input test")
+      print("Warning: Any square root must be entered as a floating-point number with at least four (4) decimal places") 
+      print("Enter the vertices of an equilateral triangle")
+      length: float = 0
+      e1: Edge = Edge(Vertex(0, 0), Vertex(0, 0))
+      e2: Edge = Edge(Vertex(0, 0), Vertex(0, 0))
+      e3: Edge = Edge(Vertex(0, 0), Vertex(0, 0))
+      valid_input: bool = False
+
+      x1: float = enter_coordinate("x coordinate of the first vertex")
+      y1: float = enter_coordinate("y coordinate of the first vertex")
+      while valid_input == False:
+         try:
+            x2: float = enter_coordinate("x coordinate of the second vertex")
+            y2: float = enter_coordinate("y coordinate of the second vertex")
+            if ((x1 == x2) and (y1 == y2)):
+               raise AssertionError
+         except AssertionError:
+            print("The vertices must be different")
+         else:
+            e1 = Edge(Vertex(x1, y1), Vertex(x2, y2))
+            length = round(e1.length, 4)
+            valid_input = True
+      
+      valid_input = False
+      while valid_input == False:
+         try:
+            x3: float = enter_coordinate("x coordinate of the third vertex")
+            y3: float = enter_coordinate("y coordinate of the third vertex")
+            e2 = Edge(Vertex(x2, y2), Vertex(x3, y3))
+            e3 = Edge(Vertex(x3, y3), Vertex(x1, y1))
+            if (round(e2.length, 4) != length) or (round(e3.length, 4) != length):
+               # print(length, round(e2.length, 4), round(e3.length, 4))
+               raise NotEquilateralError
+         except NotEquilateralError as e:
+            print(e)
+         else:
+            valid_input = True
+      
+      vertices = [Vertex(x1, y1), Vertex(x2, y2), Vertex(x3, y3)]
+      equilateral = Equilateral(vertices)
+      print("The equilateral triangle is regular:", equilateral._is_regular)
+      print("Vertices of the equilateral triangle: ", end = "")
+      equilateral.get_shape_vertices()
+      print("Edges of the equilateral triangle: ", end = "")
+      equilateral.get_shape_edges()
+      print("Inner angles of the equilateral triangle:", equilateral.get_inner_angles())
+      print("Perimeter of the equilateral triangle:", equilateral._perimeter)
+      print("Area of the equilateral triangle:", equilateral._area)
+
+   def test_user_input_isosceles(self) -> None:
+      """Function to test the creation of an isosceles triangle with user input."""
+      print("Isosceles user input test")
+      print("Enter the vertices of an isosceles triangle")
+      valid_input: bool = False
+      e1: Edge = Edge(Vertex(0, 0), Vertex(0, 0))
+      e2: Edge = Edge(Vertex(0, 0), Vertex(0, 0))
+      e3: Edge = Edge(Vertex(0, 0), Vertex(0, 0))
+
+      x1: float = enter_coordinate("x coordinate of the first vertex")
+      y1: float = enter_coordinate("y coordinate of the first vertex")
+      while valid_input == False:
+         try:
+            x2: float = enter_coordinate("x coordinate of the second vertex")
+            y2: float = enter_coordinate("y coordinate of the second vertex")
+            if ((x1 == x2) and (y1 == y2)):
+               raise AssertionError
+         except AssertionError:
+            print("The vertices must be different")
+         else:
+            e1: Edge = Edge(Vertex(x1, y1), Vertex(x2, y2))
+            valid_input = True
+      
+      valid_input = False
+      while valid_input == False:
+         try:
+            x3: float = enter_coordinate("x coordinate of the third vertex")
+            y3: float = enter_coordinate("y coordinate of the third vertex")
+            e2 = Edge(Vertex(x2, y2), Vertex(x3, y3))
+            e3 = Edge(Vertex(x3, y3), Vertex(x1, y1))
+            if (e1.length != e2.length) and (e1.length != e3.length) and (e2.length != e3.length):
+               raise NotIsoscelesError
+            elif (e1.slope == e2.slope) or (e1.slope == e3.slope) or (e2.slope == e3.slope):
+               raise NotIsoscelesError
+         except NotIsoscelesError as e:
+            print(e)
+         else:
+            valid_input = True
+
+      vertices = [Vertex(x1, y1), Vertex(x2, y2), Vertex(x3, y3)]
+      isosceles = Isosceles(vertices)
+      print("The isosceles triangle is regular:", isosceles._is_regular)
+      print("Vertices of the isosceles triangle: ", end = "")
+      isosceles.get_shape_vertices()
+      print("Edges of the isosceles triangle: ", end = "")
+      isosceles.get_shape_edges()
+      print("Inner angles of the isosceles triangle:", isosceles.get_inner_angles())
+      print("Perimeter of the isosceles triangle:", isosceles._perimeter)
+      print("Area of the isosceles triangle:", isosceles._area)
+
+   def test_user_input_trirectangle(self) -> None:
+      """Function to test the creation of a right triangle with user input."""
+      print("Right triangle user input test")
+      print("Enter the vertices of a right triangle")
+      valid_input = False
+      e1: Edge = Edge(Vertex(0, 0), Vertex(0, 0))
+
+      x1: float = enter_coordinate("x coordinate of the first vertex")
+      y1: float = enter_coordinate("y coordinate of the first vertex")
+      while valid_input == False:
+         try:
+            x2: float = enter_coordinate("x coordinate of the second vertex")
+            y2: float = enter_coordinate("y coordinate of the second vertex")
+            if ((x1 == x2) and (y1 == y2)):
+               raise AssertionError
+         except AssertionError:
+            print("The second vertex cannot be the same as the first vertex")
+         else:
+            valid_input = True
+      
+      valid_input = False
+      while valid_input == False:
+         try:
+            x3 = float(input("Enter the x coordinate of the third vertex: "))
+            y3 = float(input("Enter the y coordinate of the third vertex: "))
+            e1 = Edge(Vertex(x1, y1), Vertex(x2, y2))
+            if ((x1 == x3) and (y1 == y3)) or ((x2 == x3) and (y2 == y3)):
+               raise AssertionError
+            elif (x1 == x2):
+               if (y3 != y1) and (y3 != y2):
+                  raise NotRightTriangleError
+            elif (y1 == y2):
+               if (x3 != x1) and (x3 != x2):
+                  raise NotRightTriangleError
+            else:
+               e2 = Edge(Vertex(x2, y2), Vertex(x3, y3))
+               e3 = Edge(Vertex(x3, y3), Vertex(x1, y1))
+               if (e2.slope != 0 and e2.slope != None) or (e3.slope != 0 and e3.slope != None):
+                  raise NotRightTriangleError
+         except AssertionError:
+            print("The third vertex cannot be the same as any of the other two vertices")
+         except NotRightTriangleError as e:
+            print(e)
+         else:
+            valid_input = True
+
+      vertices = [Vertex(x1, y1), Vertex(x2, y2), Vertex(x3, y3)]
+      right_triangle = RightTriangle(vertices)
+      print("The right triangle is regular:", right_triangle._is_regular)
+      print("Vertices of the right triangle: ", end = "")
+      right_triangle.get_shape_vertices()
+      print("Edges of the right triangle: ", end = "")
+      right_triangle.get_shape_edges()
+      print("Inner angles of the right triangle:", right_triangle.get_inner_angles())
+      print("Perimeter of the right triangle:", right_triangle._perimeter)
+      print("Area of the right triangle:", right_triangle._area)
+
+   def test_user_input_scalene(self) -> None:
+      """Function to test the creation of a scalene triangle with user input."""
+      print("Scalene triangle user input test")
+      print("Enter the vertices of an scalene triangle")
+      e1: Edge = Edge(Vertex(0, 0), Vertex(0, 0))
+      e2: Edge = Edge(Vertex(0, 0), Vertex(0, 0))
+      valid_input: bool = False
+
+      x1: float = enter_coordinate("x coordinate of the first vertex")
+      y1: float = enter_coordinate("y coordinate of the first vertex")
+      while valid_input == False:
+         try:
+            x2: float = enter_coordinate("x coordinate of the second vertex")
+            y2: float = enter_coordinate("y coordinate of the second vertex")
+            if ((x1 == x2) and (y1 == y2)):
+               raise AssertionError
+         except AssertionError:
+            print("The second vertex cannot be the same as the first vertex")
+         else:
+            e1 = Edge(Vertex(x1, y1), Vertex(x2, y2))
+            valid_input = True
+      
+      valid_input = False
+      while valid_input == False:
+         try:
+            x3: float = enter_coordinate("x coordinate of the third vertex")
+            y3: float = enter_coordinate("y coordinate of the third vertex")
+            e2 = Edge(Vertex(x2, y2), Vertex(x3, y3))
+            if (e1.slope == e2.slope):
+               raise NotTriangleError
+         except NotTriangleError as e:
+            print(e)
+         else:
+            valid_input = True
+
+      vertices = [Vertex(x1, y1), Vertex(x2, y2), Vertex(x3, y3)]
+      scalene = Scalene(vertices)
+      print("The scalene triangle is regular:", scalene._is_regular)
+      print("Vertices of the scalene triangle: ", end = "")
+      scalene.get_shape_vertices()
+      print("Edges of the scalene triangle: ", end = "")
+      scalene.get_shape_edges()
+      print("Inner angles of the scalene triangle:", scalene.get_inner_angles())
+      print("Perimeter of the scalene triangle:", scalene._perimeter)
+      print("Area of the scalene triangle:", scalene._area)
+
+   def test_user_input_all(self) -> None:
+      self.test_user_input_shape()
+      print()
+      self.test_user_input_rectangle()
+      print()
+      self.test_user_input_square()
+      print()
+      self.test_user_input_triangle()
+      print()
+      self.test_user_input_scalene()
+      print()
+      self.test_user_input_equilateral()
+      print()
+      self.test_user_input_isosceles()
+      print()
+      self.test_user_input_trirectangle()
 class Vertex:
    def __init__(self, given_x, given_y) -> None:
       self.x = given_x
@@ -34,21 +582,6 @@ class Shape:
       self._is_regular: bool = self._is_shape_regular()
       self._area: float = None
       self._perimeter: float = None
-
-   def _eliminate_repeated_vertices(self, vertices_giv) -> list:
-      """Method to remove vertices with the same x and same y coordinates"""
-
-      count = 0
-      for k in vertices_giv:
-         count = 0
-         for j in vertices_giv:
-               if (k.x == j.x) and (k.y == j.y):
-                  count += 1
-               if count > 1:
-                  vertices_giv.remove(j)
-                  count -= 1
-
-      return vertices_giv
    
    def _sort_not_passed_vertices(self, m: Vertex, vertices_giv: list, passed: str) -> list:
       """Method to sort the vertices that have not been passed yet, that is, that have not been sorted yet. This is done to avoid positioning a vertex as the following of another vertex although is not the immediately following one."""
@@ -134,7 +667,6 @@ class Shape:
       """This method is responsible for creating a clockwise list of the vertices of the shape. It does so by checking which conditions the vertices of a previously ordered and optimized (no repeated vertices) list of vertices fulfill. This will vary depending on the current outermost vertex from the center of the shape (left-most, right-most, top-most or bottom-most). The method will then sort the vertices so that the following one is the closest to the current vertex."""
       """Analogy: This system as a whole can be seen as a clock: imagine a convex shape. Although it can be as irregular as you want, it is an approximation of a circle, somewhat, right? Now, its vertices can be seen as different times the clock gives when its hands start to move clockwise. What the method does is it makes sure the usual times are set on the right place, for example, you don't want to see you just had lunch and it's 5:00 an hour later, right? To do this, it first sets the 12:00, 3:00, 6:00 and 9:00 times to have a reference of where the other times (vertices) are. Then, it just looks at the time at a certain position and compares it with the following reference (the current or already passed is 12:00 to start), so as to avoid misplacing times (vertices), and determines if there is any other time further in the past than the reference in the whole clock. If so, it swaps the times (vertices) so that the time (vertex) that is further in the past is the following one. It does this for all times (vertices) in the clock (shape) until it reaches the 12:00 time (vertex) again."""
 
-      vertices_giv = self._eliminate_repeated_vertices(vertices_giv)
       vertices_giv = sorted(vertices_giv, key = lambda vertex: vertex.x)
       min_y, max_y, min_x, max_x = self._get_max_and_min_vertices(vertices_giv)
       passed: int = 0 
@@ -446,8 +978,8 @@ class RightTriangle(Triangle):
       return super()._compute_perimeter() # * No special way of doing it so it just adds the edges' lengths
 
    def _compute_area(self) -> float:
-      self.edges = sorted(self._edges, key = lambda edge: edge.length) # * Guarantees the hypothenuse is the last edge, so the other two will be the legs (catetos)
-      return round((self._edges[0].length * self._edges[1].length) / 2, 2)
+      ordered_edges = sorted(self._edges, key = lambda edge: edge.length) # * Guarantees the hypothenuse is the last edge, so the other two will be the legs (catetos)
+      return round((ordered_edges[0].length * ordered_edges[1].length) / 2, 2)
 
 if __name__ == "__main__":
    # Uncomment  the following lines if you want to test the create_shape() method quickly
@@ -468,176 +1000,10 @@ if __name__ == "__main__":
    # test_shape.get_shape_vertices()
 
    print("Hello! This is a program to create a convex shape")
-   print("Let's create a convex shape first!")
-   choice = str(input(""))
-   given_vertices: list = []
-   vertex_type: str = "x"
-   user_input = 0
-   x: int = 0
-   y: int = 0
-   if choice == "y":
-      print("To stop entering vertices type \"s\" after entering the y-coordinate of the last vertex")
-      conti = True
-      user_input = input("Please insert the x coordinate of the first vertex in the shape: ")
-      while conti == True:
-         if user_input != "s":
-            if vertex_type == "x":
-               x = float(user_input)
-               vertex_type = "y"
-               user_input = input("Now, please insert the y coordinate of the vertex in the shape: ")
-            else:
-               y = float(user_input)
-               vertex_type = "x"
-               given_vertices.append(Vertex(x, y))
-               user_input = input("Please insert the x coordinate of the next vertex in the shape: ")
-
-   else:
-      conti = False
-
-   shape1 = Shape(given_vertices)
-   print("The shape is regular:", shape1._is_regular)
-   print("The vertices are: ", end="")
-   shape1.get_shape_vertices()
-   print("The edges are: ", end="")
-   shape1.get_shape_edges()
-   print("The inner angles are:", shape1.get_inner_angles())
-   print()
-   
-   given_vertices.clear()
-   print("Now let's create an isosceles triangle! (one with two sides of equal length):")
-   x1 = float(input("Enter the x coordinate of the first vertex of the triangle: "))
-   y1 = float(input("Enter the y coordinate of the first vertex of the triangle: "))
-   given_vertices.append(Vertex(x1, y1))
-   x2 = float(input("Enter the x coordinate of the second vertex of the triangle: "))
-   y2 = float(input("Enter the y coordinate of the second vertex of the triangle: "))
-   given_vertices.append(Vertex(x2, y2))
-   x3 = float(input("Enter the x coordinate of the third vertex of the triangle: "))
-   y3 = float(input("Enter the y coordinate of the third vertex of the triangle: "))
-   given_vertices.append(Vertex(x3, y3))
-   isosceles = Isosceles(given_vertices)
-   print("The shape is regular:", isosceles._is_regular)
-   print("The vertices are: ", end="")
-   isosceles.get_shape_vertices()
-   print("The edges are: ", end="")
-   isosceles.get_shape_edges()
-   print("The inner angles are:", isosceles.get_inner_angles())
-   print("The area of the triangle is:", isosceles.get_area())
-   print("The perimeter of the triangle is:", isosceles.get_perimeter())
-   print()
-
-   given_vertices.clear()
-   print("Now let's create an equilateral triangle! (one with all of its sides of the same length)")
-   x1 = float(input("Enter the x coordinate of the first vertex of the triangle: "))
-   y1 = float(input("Enter the y coordinate of the first vertex of the triangle: "))
-   given_vertices.append(Vertex(x1, y1))
-   x2 = float(input("Enter the x coordinate of the second vertex of the triangle: "))
-   y2 = float(input("Enter the y coordinate of the second vertex of the triangle: "))
-   given_vertices.append(Vertex(x2, y2))
-   x3 = float(input("Enter the x coordinate of the third vertex of the triangle: "))
-   y3 = float(input("Enter the y coordinate of the third vertex of the triangle: "))
-   given_vertices.append(Vertex(x3, y3))
-   equilateral = Equilateral(given_vertices)
-   print("The shape is regular:", equilateral._is_regular)
-   print("The vertices are: ", end="")
-   equilateral.get_shape_vertices()
-   print("The edges are: ", end="")
-   equilateral.get_shape_edges()
-   print("The inner angles are:", equilateral.get_inner_angles())
-   print("The area of the triangle is:", equilateral.get_area())
-   print("The perimeter of the triangle is:", equilateral.get_perimeter())
-   print()
-
-   given_vertices.clear()
-   print("Now, let's create an scalene triangle! (one with all of its sides of different length)")
-   x1 = float(input("Enter the x coordinate of the first vertex of the triangle: "))
-   y1 = float(input("Enter the y coordinate of the first vertex of the triangle: "))
-   given_vertices.append(Vertex(x1, y1))
-   x2 = float(input("Enter the x coordinate of the second vertex of the triangle: "))
-   y2 = float(input("Enter the y coordinate of the second vertex of the triangle: "))
-   given_vertices.append(Vertex(x2, y2))
-   x3 = float(input("Enter the x coordinate of the third vertex of the triangle: "))
-   y3 = float(input("Enter the y coordinate of the third vertex of the triangle: "))
-   given_vertices.append(Vertex(x3, y3))
-   scalene = Scalene(given_vertices)
-   print("The shape is regular:", scalene._is_regular)
-   print("The vertices are: ", end="")
-   scalene.get_shape_vertices()
-   print("The edges are: ", end="")
-   scalene.get_shape_edges()
-   print("The inner angles are:", scalene.get_inner_angles())
-   print("The area of the triangle is:", scalene.get_area())
-   print("The perimeter of the triangle is:", scalene.get_perimeter())
-   print()
-
-   given_vertices.clear()
-   print("Now, let's create a right triangle! (one with a right angle, two legs and a hypothenuse)")
-   x1 = float(input("Enter the x coordinate of the first vertex of the triangle: "))
-   y1 = float(input("Enter the y coordinate of the first vertex of the triangle: "))
-   given_vertices.append(Vertex(x1, y1))
-   x2 = float(input("Enter the x coordinate of the second vertex of the triangle: "))
-   y2 = float(input("Enter the y coordinate of the second vertex of the triangle: "))
-   given_vertices.append(Vertex(x2, y2))
-   x3 = float(input("Enter the x coordinate of the third vertex of the triangle: "))
-   y3 = float(input("Enter the y coordinate of the third vertex of the triangle: "))
-   given_vertices.append(Vertex(x3, y3))
-   rightTriangle = RightTriangle(given_vertices)
-   print("The shape is regular:", rightTriangle._is_regular)
-   print("The vertices are: ", end="")
-   rightTriangle.get_shape_vertices()
-   print("The edges are: ", end="")
-   rightTriangle.get_shape_edges()
-   print("The inner angles are:", rightTriangle.get_inner_angles())
-   print("The area of the triangle is:", rightTriangle.get_area())
-   print("The perimeter of the triangle is:", rightTriangle.get_perimeter())
-   print()
-
-   given_vertices.clear()
-   print("Now, let's create a square! (all of its sides must have the same length)")
-   x1 = float(input("Enter the x coordinate of the first vertex of the square: "))
-   y1 = float(input("Enter the y coordinate of the first vertex of the square: "))
-   given_vertices.append(Vertex(x1, y1))
-   x2 = float(input("Enter the x coordinate of the second vertex of the square: "))
-   y2 = float(input("Enter the y coordinate of the second vertex of the square: "))
-   given_vertices.append(Vertex(x2, y2))
-   x3 = float(input("Enter the x coordinate of the third vertex of the square: "))
-   y3 = float(input("Enter the y coordinate of the third vertex of the square: "))
-   given_vertices.append(Vertex(x3, y3))
-   x4 = float(input("Enter the x coordinate of the third vertex of the square: "))
-   y4 = float(input("Enter the y coordinate of the third vertex of the square: "))
-   given_vertices.append(Vertex(x4, y4))
-   square = Square(given_vertices)
-   print("The shape is regular:", square._is_regular)
-   print("The vertices are: ", end="")
-   square.get_shape_vertices()
-   print("The edges are: ", end="")
-   square.get_shape_edges()
-   print("The inner angles are:", square.get_inner_angles())
-   print("The area of the square is:", square.get_area())
-   print("The perimeter of the square is:", square.get_perimeter())
-   print()
-
-   given_vertices.clear()
-   print("Now, let's create a rectangle! (a shape with two pairs of sides that must share the same length)")
-   x1 = float(input("Enter the x coordinate of the first vertex of the rectangle: "))
-   y1 = float(input("Enter the y coordinate of the first vertex of the rectangle: "))
-   given_vertices.append(Vertex(x1, y1))
-   x2 = float(input("Enter the x coordinate of the second vertex of the rectangle: "))
-   y2 = float(input("Enter the y coordinate of the second vertex of the rectangle: "))
-   given_vertices.append(Vertex(x2, y2))
-   x3 = float(input("Enter the x coordinate of the third vertex of the rectangle: "))
-   y3 = float(input("Enter the y coordinate of the third vertex of the rectangle: "))
-   given_vertices.append(Vertex(x3, y3))
-   x4 = float(input("Enter the x coordinate of the third vertex of the rectangle: "))
-   y4 = float(input("Enter the y coordinate of the third vertex of the rectangle: "))
-   given_vertices.append(Vertex(x4, y4))
-   rectangle = Rectangle(given_vertices)
-   print("The shape is regular:", rectangle._is_regular)
-   print("The vertices are: ", end="")
-   rectangle.get_shape_vertices()
-   print("The edges are: ", end="")
-   rectangle.get_shape_edges()
-   print("The inner angles are:", rectangle.get_inner_angles())
-   print("The area of the rectangle is:", rectangle.get_area())
-   print("The perimeter of the rectangle is:", rectangle.get_perimeter())
-
-
+   test = Test()
+   try:
+      test.test_user_input_all()
+   except KeyboardInterrupt:
+      print("\n\nThe program was interrupted by the user.")
+   finally:
+      print("Thank you for testing the all-in-one shape module! 😃", end="")

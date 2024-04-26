@@ -8,7 +8,11 @@ except ValueError:
 
 from Shape.shape import Shape
 from Shape.Edge.edge import Edge
-from Shape.Edge.vertex import Vertex
+from Shape.Edge.vertex import Vertex, enter_coordinate
+
+class NotTriangleError(Exception):
+   def __init__(self, *args) -> None:
+      super().__init__(*args)
 
 class Triangle(Shape):
    def __init__(self, *args) -> None:
@@ -43,15 +47,40 @@ def test_user_input() -> None:
    """Function to test the creation of a triangle with user input."""
    print("Triangle user input test")
    print("Enter the vertices of a triangle")
-   x1 = float(input("Enter the x coordinate of the first vertex: "))
-   y1 = float(input("Enter the y coordinate of the first vertex: "))
-   x2 = float(input("Enter the x coordinate of the second vertex: "))
-   y2 = float(input("Enter the y coordinate of the second vertex: "))
-   x3 = float(input("Enter the x coordinate of the third vertex: "))
-   y3 = float(input("Enter the y coordinate of the third vertex: "))
+   e1: Edge = Edge(Vertex(0, 0), Vertex(0, 0))
+   e2: Edge = Edge(Vertex(0, 0), Vertex(0, 0))
+   valid_input: bool = False
+
+   x1: float = float(input("x coordinate of the first vertex"))
+   y1: float = float(input("y coordinate of the first vertex"))
+   while valid_input == False:
+      try:
+         x2: float = float(input("x coordinate of the second vertex"))
+         y2: float = float(input("y coordinate of the second vertex"))
+         if ((x1 == x2) and (y1 == y2)):
+            raise AssertionError
+      except AssertionError:
+         print("The second vertex cannot be the same as the first vertex")
+      else:
+         e1 = Edge(Vertex(x1, y1), Vertex(x2, y2))
+         valid_input = True
+   
+   valid_input = False
+   while valid_input == False:
+      try:
+         x3: float = float(input("x coordinate of the third vertex"))
+         y3: float = float(input("y coordinate of the third vertex"))
+         e2 = Edge(Vertex(x2, y2), Vertex(x3, y3))
+         if (e1.slope == e2.slope):
+            raise NotTriangleError("The vertices entered do not form a triangle")
+      except NotTriangleError as e:
+         print(e)
+      else:
+         valid_input = True
+
    vertices = [Vertex(x1, y1), Vertex(x2, y2), Vertex(x3, y3)]
    triangle = Triangle(vertices)
-   print("The shape is regular:", triangle._is_regular)
+   print("The triangle is regular:", triangle._is_regular)
    print("The vertices are: ", end="")
    triangle.get_shape_vertices()
    print("The edges are: ", end="")
@@ -59,6 +88,11 @@ def test_user_input() -> None:
    print("The inner angles are:", triangle.get_inner_angles())
 
 if __name__ == "__main__":
-   test_default()
-   print()
-   test_user_input()
+   try:
+      test_default()
+      print()
+      test_user_input()
+   except KeyboardInterrupt:
+      print("\n\nProgram stopped by the user")
+   finally:
+      print("Thank you for using the program!", end="")
